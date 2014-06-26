@@ -12,6 +12,9 @@ require_once 'config.php';
 class ORM{
 	private $connection;
 	
+	/*
+	 * Connect database with given config information
+	 */
 	public function __construct(){
 		$connection_string = "mysql:host=" . HOST . ";dbname=" . DBNAME . ";";
 		try{
@@ -19,5 +22,18 @@ class ORM{
 		}catch (PDOException $e){
 			echo $e;
 		}	
+	}
+	/*
+	 * Check if exists table 
+	 * 
+	 * @param string $model
+	 * @return boolean
+	 */
+	protected function table_exists($model){
+		$query = $this->connection->prepare("SELECT 1 FROM $model");
+		if($query->execute())
+			return true;
+		
+		return false;
 	}
 } 
