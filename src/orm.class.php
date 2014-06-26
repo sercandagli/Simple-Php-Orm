@@ -36,4 +36,22 @@ class ORM{
 		
 		return false;
 	}
+	
+	/*
+	 * Get fields with given single property
+	 * 
+	 * @param string $model
+	 * @param string $field
+	 * @param $value
+	 */
+	
+	public function find($model, $field, $value){
+		if($this->table_exists($model)){
+			$query = $this->connection->prepare("SELECT * FROM $model WHERE $field=?");
+			if($query->execute(array($value)))
+				return $query->fetchAll(PDO::FETCH_ASSOC);
+			
+			return false;
+		}
+	}
 } 
