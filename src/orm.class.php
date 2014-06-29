@@ -119,10 +119,40 @@ class ORM{
 				$this->query_string = substr($this->query_string, 0, $count);
 				$this->query = $this->connection->prepare($this->query_string);
 				if($this->query->execute($paramArray)){
+					$this->query_string = null;
 					return true;
 				}
 				return false;
 			}
 		}
 	}
+	
+	/*
+	 * Delete method
+	 * 
+	 * @param $model
+	 * @param array $conditions
+	 * @param string $condition_type
+	 */
+	
+	public function delete($model, $conditions = null, $condition_type =  "AND"){
+		if($conditions != null){
+			$this->query_string = "DELETE FROM $model WHERE ";
+			foreach ($conditions as $key => $value){
+				$this->query_string .= $key . "='" . $value . "' $condition_type ";
+			}
+			if($condition_type == "AND")
+				$count = -4;
+			else
+				$count = -3;
+			$this->query_string = substr($this->query_string, 0, $count);
+			$this->query = $this->connection->prepare($this->query_string);
+			if($this->query->execute()){
+				$this->query_string = null;
+				return true;
+			}
+			print_r($this->query->errorInfo());
+			return false;
+		}
+	}	
 } 
