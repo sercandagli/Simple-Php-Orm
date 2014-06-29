@@ -13,7 +13,8 @@ require_once 'config.php';
 class ORM{
 	private $connection;
 	protected $query;
-	public $query_string;
+	protected $query_string;
+	protected $paramArray = array();
 	
 	/*
 	 * Connect database with given config information
@@ -48,10 +49,14 @@ class ORM{
 	 * @param $value
 	 */
 	
-	public function find($model, $field, $value){
+	public function find($model, $conditions = null, $condition_type = "AND"){
 		if($this->table_exists($model)){
-			$this->query = $this->connection->prepare("SELECT * FROM $model WHERE $field=?");
-			if($query->execute(array($value)))
+			$this->query_string = "SELECT * FROM $model";
+			if($conditions != null){
+				$this->create_condition($conditions, $condition_type);
+			}
+			$this->query = $this->connection->prepare($this->query_string);
+			if($this->query->execute($this->paramArray))
 				return $this->query->fetchAll(PDO::FETCH_ASSOC);
 			
 			return false;
@@ -67,18 +72,17 @@ class ORM{
 	public function save($model, Array $data){
 		if($this->table_exists($model)){
 			if(count($data) > 0){
-				$paramArray = array();
 				$paramString = "(";
 				$this->query_string = "INSERT INTO $model (";
 				foreach ($data as $key => $value){
 					$this->query_string .= "$key,";
 					$paramString .= "?,";
-					$paramArray[] = $value; 
+					$this->paramArray[] = $value; 
 				}
 				$this->query_string = substr($this->query_string, 0, -1);
 				$this->query_string .= ") VALUES " . substr($paramString, 0, -1) . ")"; 
 				$this->query = $this->connection->prepare($this->query_string);
-				if($this->query->execute($paramArray))
+				if($this->query->execute($this->paramArray))
 					$this->query_string = "";
 					return true;
 				
@@ -102,29 +106,21 @@ class ORM{
 		if($conditions != null){
 			if($this->table_exists($model)){
 				$this->query_string = "UPDATE $model SET ";
-				$paramArray = array();
 				foreach ($data as $key => $value){
-					$this->query_string .= $key . "=?, ";
-					$paramArray[] = $value;
+					$this->query_string .= $key . "=?,";
+					$this->paramArray[] = $value;
 				}
-				$this->query_string = substr($this->query_string, 0, -2);
-				$this->query_string .= " WHERE ";
-				foreach ($conditions as $key => $value){
-					$this->query_string .= $key . "='" . $value . "' $condition_type ";
-				}
-				if($condition_type == "AND")
-					$count = -4;
-				else 
-					$count = -3;
-				$this->query_string = substr($this->query_string, 0, $count);
+				$this->query_string = substr($this->query_string, 0, -1); 
+				$this->create_condition($conditions, $condition_type); 
 				$this->query = $this->connection->prepare($this->query_string);
-				if($this->query->execute($paramArray)){
+				if($this->query->execute($this->paramArray)){
 					$this->query_string = null;
 					return true;
 				}
 				return false;
 			}
 		}
+		return false;
 	}
 	
 	/*
@@ -137,21 +133,44 @@ class ORM{
 	
 	public function delete($model, $conditions = null, $condition_type =  "AND"){
 		if($conditions != null){
-			$this->query_string = "DELETE FROM $model WHERE ";
-			foreach ($conditions as $key => $value){
-				$this->query_string .= $key . "='" . $value . "' $condition_type ";
-			}
-			if($condition_type == "AND")
-				$count = -4;
-			else
-				$count = -3;
-			$this->query_string = substr($this->query_string, 0, $count);
+			$this->query_string = "DELETE FROM $model";
+			$this->create_condition($conditions, $condition_type);
 			$this->query = $this->connection->prepare($this->query_string);
-			if($this->query->execute()){
+			if($this->query->execute($this->paramArray)){
 				$this->query_string = null;
 				return true;
 			}
 			return false;
 		}
-	}	
+		return false;
+	}
+
+	
+	/*
+	 * Create conditions
+	 * Create conditions with given condition rule
+	 * 
+	 * @param array $conditions
+	 * @param string $condition_type
+	 */
+	
+	private function create_condition($conditions, $condition_type){
+		$this->query_string .= " WHERE ";
+		foreach ($conditions as $key => $value){
+			$this->query_string .= $key . "=?" . $condition_type . " ";
+			$this->paramArray[] = $value; // 
+		}
+		switch($condition_type){
+			case "AND":
+				$count = -4;
+				break;
+			case "OR":
+				$count = -3;
+				break;
+			default:
+				throw new Exception("Unexpected condition type");
+		}
+		$this->query_string = substr($this->query_string, 0, $count);
+		return true;
+	}
 } 
