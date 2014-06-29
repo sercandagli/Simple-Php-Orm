@@ -151,7 +151,6 @@ class ORM{
 				$this->query_string = null;
 				return true;
 			}
-			print_r($this->query->errorInfo());
 			return false;
 		}
 	}	
