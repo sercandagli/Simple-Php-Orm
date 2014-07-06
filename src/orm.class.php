@@ -1,8 +1,7 @@
 <?php
-ini_set("display_errors", 1);
 require_once 'config.php';
 /*
- * Simple Php Orm For Mysql
+ * Simple Php Orm
  * 
  * @author Sercan Dağlı	<sdagli7@gmail.com>
  */
@@ -20,7 +19,7 @@ class ORM{
 	 * Connect database with given config information
 	 */
 	public function __construct(){
-		$connection_string = "mysql:host=" . HOST . ";dbname=" . DBNAME . ";";
+		$connection_string = DATABASE . ":host=" . HOST . ";dbname=" . DBNAME . ";";
 		try{
 			$this->connection = new PDO($connection_string, USERNAME, PASSWORD);
 		}catch (PDOException $e){
@@ -52,7 +51,7 @@ class ORM{
 	public function find($model, $conditions = null, $condition_type = "AND"){
 		if($this->table_exists($model)){
 			$this->query_string = "SELECT * FROM $model";
-			if($conditions != null){
+			if($conditions != null){ 
 				$this->create_condition($conditions, $condition_type);
 			}
 			$this->query = $this->connection->prepare($this->query_string);
@@ -158,7 +157,7 @@ class ORM{
 		$this->query_string .= " WHERE ";
 		foreach ($conditions as $key => $value){
 			$this->query_string .= $key . "=?" . $condition_type . " ";
-			$this->paramArray[] = $value; // 
+			$this->paramArray[] = $value; 
 		}
 		switch($condition_type){
 			case "AND":
@@ -170,7 +169,7 @@ class ORM{
 			default:
 				throw new Exception("Unexpected condition type");
 		}
-		$this->query_string = substr($this->query_string, 0, $count);
+		$this->query_strinMysqlg = substr($this->query_string, 0, $count);
 		return true;
 	}
 } 
