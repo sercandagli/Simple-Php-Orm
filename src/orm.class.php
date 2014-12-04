@@ -55,8 +55,11 @@ class ORM{
 				$this->create_condition($conditions, $condition_type);
 			}
 			$this->query = $this->connection->prepare($this->query_string);
-			if($this->query->execute($this->paramArray))
+			if($this->query->execute($this->paramArray)){
+				$this->paramArray = array();
 				return $this->query->fetchAll(PDO::FETCH_ASSOC);
+			}
+				
 			
 			return false;
 		}
@@ -83,6 +86,7 @@ class ORM{
 				$this->query = $this->connection->prepare($this->query_string);
 				if($this->query->execute($this->paramArray))
 					$this->query_string = "";
+				$this->paramArray = array();
 					return true;
 				
 				return false;
@@ -114,6 +118,7 @@ class ORM{
 				$this->query = $this->connection->prepare($this->query_string);
 				if($this->query->execute($this->paramArray)){
 					$this->query_string = null;
+				$this->paramArray = array();
 					return true;
 				}
 				return false;
@@ -137,6 +142,7 @@ class ORM{
 			$this->query = $this->connection->prepare($this->query_string);
 			if($this->query->execute($this->paramArray)){
 				$this->query_string = null;
+				$this->paramArray = array();
 				return true;
 			}
 			return false;
